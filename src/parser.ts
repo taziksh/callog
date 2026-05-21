@@ -11,8 +11,9 @@ export interface ParseError {
   error: string;
 }
 
-// Matches duration tokens: "45min", "45 mins", "1h", "1.5h", "2hr", "90m"
-const DURATION_RE = /\b(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes)\b/i;
+// Matches duration tokens: "45min", "45 mins", "1h", "1.5h", "2hr", "90m".
+// Units are listed longest-first within each group so "min" wins over "m".
+const DURATION_RE = /\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/i;
 
 export function parse(text: string, now: Date = new Date()): ParsedEvent | ParseError {
   const trimmed = text.trim();

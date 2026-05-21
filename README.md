@@ -59,7 +59,7 @@ bun install
 
 Smoke-test the parser (no Google needed yet):
 ```bash
-bun run test:parser     # expect: all passed
+bun test     # expect: all passed
 ```
 
 ### 3. Google OAuth credentials
@@ -137,7 +137,7 @@ src/
 ├── server.ts       # optional HTTP server (/log, /undo, /health)
 ├── log-event.ts    # shared "text → calendar event" step (CLI + server both use it)
 ├── parser.ts       # text → { title, start, end, description }
-├── parser.test.ts  # parser tests  (bun run test:parser)
+├── parser.test.ts  # parser tests  (bun test)
 ├── calendar.ts     # Google Calendar create/delete
 └── oauth-setup.ts  # one-time token generator  (bun run oauth)
 ```

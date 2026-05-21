@@ -7,7 +7,7 @@
     "oauth": "bun src/oauth-setup.ts",
     "dev": "bun --watch src/server.ts",
     "cli": "bun src/cli.ts",
-    "test:parser": "bun src/parser.test.ts"
+    "test": "bun test"
   },
   "dependencies": {
     "chrono-node": "^2.7.7",
