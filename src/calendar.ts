@@ -2,8 +2,11 @@ import { google } from 'googleapis';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const CRED_PATH = path.resolve('credentials.json');
-const TOKEN_PATH = path.resolve('token.json');
+// Anchor to the project root (one level up from src/) so the CLI finds these
+// no matter which directory it's invoked from.
+const ROOT = path.resolve(import.meta.dir, '..');
+const CRED_PATH = path.join(ROOT, 'credentials.json');
+const TOKEN_PATH = path.join(ROOT, 'token.json');
 
 function loadAuth() {
   if (!fs.existsSync(CRED_PATH)) {

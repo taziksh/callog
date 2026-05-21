@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import { parse } from './parser.js';
-import { createEvent, deleteEvent } from './calendar.js';
+import { logEvent } from './log-event.js';
+import { deleteEvent } from './calendar.js';
 
 const app = express();
 app.use(express.json());
@@ -20,20 +20,18 @@ app.post('/log', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'missing or invalid `text`' });
   }
 
-  const parsed = parse(text);
-  if ('error' in parsed) {
-    return res.status(400).json(parsed);
-  }
-
   try {
-    const event = await createEvent(parsed.title, parsed.start, parsed.end);
+    const result = await logEvent(text);
+    if (!result.ok) {
+      return res.status(400).json({ error: result.error });
+    }
     return res.json({
       ok: true,
-      title: parsed.title,
-      start: parsed.start.toISOString(),
-      end: parsed.end.toISOString(),
-      event_id: event.id,
-      link: event.htmlLink,
+      title: result.title,
+      start: result.start.toISOString(),
+      end: result.end.toISOString(),
+      event_id: result.eventId,
+      link: result.link,
     });
   } catch (e: any) {
     console.error(e);
