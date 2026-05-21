@@ -87,9 +87,10 @@ Opens a URL → sign in with the account you added as a test user → you'll see
 ## CLI usage
 
 ```bash
-cal "leetcode 2-4pm"                       # log an event
-cal "leetcode 2-4pm // solved DP 1-50"     # with a note
-cal undo <event_id>                        # remove an event (id is printed on create)
+cal leetcode 2-4pm                         # log an event
+cal leetcode 2-4pm // solved DP 1-50       # with a note
+cal "alex's 1:1 3-4pm"                     # quote entries containing ' or |
+cal undo <event_id>                        # remove an event (id printed on create)
 cal --help                                 # full syntax
 ```
 

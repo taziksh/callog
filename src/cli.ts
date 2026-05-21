@@ -21,9 +21,10 @@ Arguments:
   <note>    text after //, saved as the event's description
 
 Examples:
-  cal "leetcode 2-4pm"
-  cal "deep work 9-10:30am // finish the spec"
-  cal "workout 6am 1h"
+  cal leetcode 2-4pm
+  cal deep work 9-10:30am // finish the spec
+  cal workout 6am 1h
+  cal "alex's 1:1 3-4pm"      (use quotes when the entry has ' or |)
   cal undo 9f8bb4lp3d16ba3nh903hmp49k`;
 
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h' || args[0] === 'help') {
