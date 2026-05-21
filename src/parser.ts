@@ -4,6 +4,7 @@ export interface ParsedEvent {
   title: string;
   start: Date;
   end: Date;
+  description?: string;
 }
 
 export interface ParseError {
@@ -17,15 +18,25 @@ export function parse(text: string, now: Date = new Date()): ParsedEvent | Parse
   const trimmed = text.trim();
   if (!trimmed) return { error: 'empty input' };
 
+  // 0. Split off an optional description after "//"  (e.g. "leetcode 2-4pm // solved DP")
+  let description: string | undefined;
+  let titlePart = trimmed;
+  const descIdx = trimmed.indexOf('//');
+  if (descIdx !== -1) {
+    description = trimmed.slice(descIdx + 2).trim() || undefined;
+    titlePart = trimmed.slice(0, descIdx).trim();
+  }
+  if (!titlePart) return { error: 'no title found' };
+
   // 1. Try to find a duration token first, remove it so chrono doesn't get confused
   let durationMinutes: number | null = null;
-  let working = trimmed;
-  const durMatch = trimmed.match(DURATION_RE);
+  let working = titlePart;
+  const durMatch = titlePart.match(DURATION_RE);
   if (durMatch) {
     const n = parseFloat(durMatch[1]);
     const unit = durMatch[2].toLowerCase();
     durationMinutes = unit.startsWith('h') ? Math.round(n * 60) : Math.round(n);
-    working = (trimmed.slice(0, durMatch.index!) + trimmed.slice(durMatch.index! + durMatch[0].length))
+    working = (titlePart.slice(0, durMatch.index!) + titlePart.slice(durMatch.index! + durMatch[0].length))
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -67,5 +78,5 @@ export function parse(text: string, now: Date = new Date()): ParsedEvent | Parse
 
   if (!title) return { error: 'no title found' };
 
-  return { title, start, end };
+  return { title, start, end, description };
 }

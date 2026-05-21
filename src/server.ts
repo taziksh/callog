@@ -30,6 +30,7 @@ app.post('/log', async (req: Request, res: Response) => {
       title: result.title,
       start: result.start.toISOString(),
       end: result.end.toISOString(),
+      description: result.description,
       event_id: result.eventId,
       link: result.link,
     });

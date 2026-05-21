@@ -39,6 +39,7 @@ try {
   }
   console.log(`✓ ${result.title}`);
   console.log(`  ${fmt(result.start)} → ${fmt(result.end)}`);
+  if (result.description) console.log(`  note: ${result.description}`);
   if (result.eventId) console.log(`  undo: cal undo ${result.eventId}`);
 } catch (e: any) {
   console.error(`✗ ${e.message ?? 'calendar error'}`);

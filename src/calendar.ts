@@ -23,7 +23,7 @@ function loadAuth() {
   return oAuth2Client;
 }
 
-export async function createEvent(title: string, start: Date, end: Date) {
+export async function createEvent(title: string, start: Date, end: Date, description?: string) {
   const auth = loadAuth();
   const calendar = google.calendar({ version: 'v3', auth });
 
@@ -33,6 +33,7 @@ export async function createEvent(title: string, start: Date, end: Date) {
     calendarId: 'primary',
     requestBody: {
       summary: title,
+      description,
       start: { dateTime: start.toISOString(), timeZone: tz },
       end: { dateTime: end.toISOString(), timeZone: tz },
     },

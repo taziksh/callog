@@ -6,6 +6,7 @@ export interface LogResult {
   title: string;
   start: Date;
   end: Date;
+  description: string | null;
   eventId: string | null;
   link: string | null;
 }
@@ -23,12 +24,13 @@ export async function logEvent(text: string): Promise<LogResult | LogFailure> {
     return { ok: false, error: parsed.error };
   }
 
-  const event = await createEvent(parsed.title, parsed.start, parsed.end);
+  const event = await createEvent(parsed.title, parsed.start, parsed.end, parsed.description);
   return {
     ok: true,
     title: parsed.title,
     start: parsed.start,
     end: parsed.end,
+    description: parsed.description ?? null,
     eventId: event.id,
     link: event.htmlLink,
   };

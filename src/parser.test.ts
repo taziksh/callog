@@ -12,12 +12,15 @@ const cases = [
   { input: 'coffee w alex 3-3:30pm', want: 'ok' },
   { input: 'reading 8pm 90m', want: 'ok' },
   { input: 'gym 1.5h 7am', want: 'ok' },
+  { input: 'leetcode 2-4pm // solved DP problems 1-50', want: 'ok' },
+  { input: 'workout 6am 1h // legs day', want: 'ok' },
 
   // Should reject
   { input: 'meeting 2pm', want: 'reject' },
   { input: 'leetcode 2-4pm 1h', want: 'reject' },
   { input: '2-4pm', want: 'reject' },
   { input: 'no time here', want: 'reject' },
+  { input: '// just a note', want: 'reject' },
   { input: '', want: 'reject' },
 ];
 
@@ -31,7 +34,8 @@ for (const c of cases) {
   const marker = ok ? '✓' : '✗';
   console.log(`${marker} [${c.want}] "${c.input}"`);
   if (!isError) {
-    console.log(`    title="${result.title}"  ${result.start.toISOString()} → ${result.end.toISOString()}`);
+    const desc = result.description ? `  note="${result.description}"` : '';
+    console.log(`    title="${result.title}"  ${result.start.toISOString()} → ${result.end.toISOString()}${desc}`);
   } else {
     console.log(`    error: ${result.error}`);
   }
