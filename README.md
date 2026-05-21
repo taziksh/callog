@@ -90,6 +90,7 @@ Opens a URL → sign in with the account you added as a test user → you'll see
 cal "leetcode 2-4pm"                       # log an event
 cal "leetcode 2-4pm // solved DP 1-50"     # with a note
 cal undo <event_id>                        # remove an event (id is printed on create)
+cal --help                                 # full syntax
 ```
 
 `cal` is a fish function at `~/.config/fish/functions/cal.fish` that runs the CLI from anywhere. Open a new terminal (or `exec fish`) after first install. Without the function, run it directly:
