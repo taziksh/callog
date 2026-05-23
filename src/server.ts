@@ -57,6 +57,6 @@ app.post('/undo', async (req: Request, res: Response) => {
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {
-  console.log(`cal-logger listening on http://localhost:${PORT}`);
+  console.log(`callog listening on http://localhost:${PORT}`);
   console.log(`auth secret: ${AUTH_SECRET === 'dev-secret-change-me' ? '(default — set AUTH_SECRET env var)' : '(custom)'}`);
 });

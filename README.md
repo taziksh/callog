@@ -1,10 +1,12 @@
-# cal-logger
+# callog
 
-Text in → calendar event out. Type `cal "leetcode 2-4pm"` and it lands on your Google Calendar.
+Text in, calendar event out. Type `cal "leetcode 2-4pm"` and it lands on your Google Calendar.
 
 Use it two ways:
 - **CLI** (`cal "..."`) — runs on your machine, no server needed. This is the main way.
 - **HTTP server** (optional) — for reaching it from somewhere that *isn't* this machine (a phone, a text-message relay, another computer). Off by default.
+
+> **Status:** personal tool, but usable. Built for quick local logging, not as a hosted multi-user calendar service.
 
 ---
 
@@ -53,7 +55,7 @@ Rejected (and why): `meeting 2pm` (no end/duration), `leetcode 2-4pm 1h` (both r
 
 ---
 
-## Setup (~10 min, one-time)
+## Setup
 
 ### 1. Install bun
 ```bash
@@ -63,7 +65,7 @@ bun --version
 
 ### 2. Install dependencies
 ```bash
-cd cal-logger
+cd callog
 bun install
 ```
 
@@ -88,9 +90,9 @@ You need a **Desktop** OAuth client for the Google Calendar API, saved as `crede
 ```bash
 bun run oauth
 ```
-Opens a URL → sign in with the account you added as a test user → you'll see "Google hasn't verified this app" (expected for a personal app) → **Advanced → Go to cal-logger (unsafe) → Allow**. It saves `token.json`.
+Opens a URL → sign in with the account you added as a test user → you'll see "Google hasn't verified this app" (expected for a personal app) → **Advanced → Go to callog (unsafe) → Allow**. It saves `token.json`.
 
-`credentials.json` and `token.json` are git-ignored — they never get committed.
+`credentials.json` and `token.json` are git-ignored. Do not commit them.
 
 ---
 
@@ -104,7 +106,7 @@ cal undo <event_id>                        # remove an event (id printed on crea
 cal --help                                 # full syntax
 ```
 
-`cal` is a fish function at `~/.config/fish/functions/cal.fish` that runs the CLI from anywhere. Open a new terminal (or `exec fish`) after first install. Without the function, run it directly:
+For daily use, add a shell alias or function that runs the CLI from this directory. Without one, run it directly:
 ```bash
 bun run cli "leetcode 2-4pm"
 ```
@@ -113,7 +115,7 @@ bun run cli "leetcode 2-4pm"
 
 ## Server usage (optional)
 
-Only needed to reach cal-logger from another device. Run it:
+Only needed to reach callog from another device. Run it:
 ```bash
 bun run dev                                # http://localhost:3000
 ```
@@ -131,7 +133,7 @@ curl -X POST http://localhost:3000/log \
   -d '{"text": "leetcode 2-4pm"}'
 ```
 
-**Auth:** the secret defaults to `dev-secret-change-me`, which is fine for local-only use. Before exposing the server to the internet, set a real one (fish):
+**Auth:** the secret defaults to `dev-secret-change-me`, which is fine for local-only use. Before exposing the server to the internet, set a real one:
 ```fish
 set -x AUTH_SECRET something-private
 bun run dev
