@@ -3,6 +3,7 @@ credentials.json
 token.json
 .env
 *.log
+.superpowers/
 
 # Beads / Dolt files (added by bd init)
 .dolt/
