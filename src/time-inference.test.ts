@@ -100,6 +100,16 @@ describe('date words override the date', () => {
     expect(r.start).toEqual(at(15, 20));
     expect(r.end).toEqual(at(15, 21));
   });
+  test('tomorrow 11-1 crosses noon -> tomorrow 11 AM - 1 PM', () => {
+    const r = inferTime('sync tomorrow 11-1', now)!;
+    expect(r.start).toEqual(at(16, 11));
+    expect(r.end).toEqual(at(16, 13));
+  });
+  test('tonight 11-1 -> 11 PM, end rolls to next day 1 AM', () => {
+    const r = inferTime('tonight 11-1', now)!;
+    expect(r.start).toEqual(at(15, 23));
+    expect(r.end).toEqual(at(16, 1));
+  });
   test('date word span is reported for removal', () => {
     const r = inferTime('meeting tomorrow 9-10', now)!;
     const removed = r.remove.map(([i, len]) => 'meeting tomorrow 9-10'.slice(i, i + len));
