@@ -1,4 +1,5 @@
 import * as chrono from 'chrono-node';
+import { inferTime } from './time-inference.js';
 
 export interface ParsedEvent {
   title: string;
@@ -14,6 +15,15 @@ export interface ParseError {
 // Matches duration tokens: "45min", "45 mins", "1h", "1.5h", "2hr", "90m".
 // Units are listed longest-first within each group so "min" wins over "m".
 const DURATION_RE = /\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/i;
+
+// Remove the given [index, length] spans from text and collapse whitespace.
+function removeSpans(text: string, spans: Array<[number, number]>): string {
+  let out = text;
+  for (const [i, len] of [...spans].sort((a, b) => b[0] - a[0])) {
+    out = out.slice(0, i) + ' ' + out.slice(i + len);
+  }
+  return out.replace(/\s+/g, ' ').trim();
+}
 
 export function parse(text: string, now: Date = new Date()): ParsedEvent | ParseError {
   const trimmed = text.trim();
@@ -40,6 +50,39 @@ export function parse(text: string, now: Date = new Date()): ParsedEvent | Parse
     working = (titlePart.slice(0, durMatch.index!) + titlePart.slice(durMatch.index! + durMatch[0].length))
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  // 1b. Bare-time inference: no am/pm present -> resolve the meridiem ourselves
+  // (most recent past), including 24-hour times and date words. chrono can't do this.
+  const inferred = inferTime(working, now);
+  if (inferred) {
+    const hasRange = inferred.end !== null;
+    const hasDuration = durationMinutes !== null;
+    if (hasRange && hasDuration) {
+      return { error: 'specify either a range OR a start+duration, not both' };
+    }
+    if (!hasRange && !hasDuration) {
+      return { error: 'need either a range (e.g. 2-4pm) or a duration (e.g. 2pm 45min)' };
+    }
+    const start = inferred.start;
+    const end = hasRange
+      ? inferred.end!
+      : new Date(start.getTime() + durationMinutes! * 60 * 1000);
+    if (end <= start) {
+      return { error: 'end time is not after start time' };
+    }
+    // Build title by removing only the time span(s), keeping any date word if
+    // it's the only remaining content (so "tonight 8-9" → title "tonight").
+    let title = removeSpans(working, inferred.remove);
+    if (!title) {
+      // Try keeping the date word in the title by only removing the time spans.
+      const timeOnlyRemove = inferred.remove.slice(1); // first span is the range/single; rest is the date word
+      // Actually remove[] order is [timeSpan, ...dateWordSpan], so keep just the time span:
+      const timeSpan = inferred.remove.slice(0, 1);
+      title = removeSpans(working, timeSpan);
+    }
+    if (!title) return { error: 'no title found' };
+    return { title, start, end, description };
   }
 
   // 2. Parse remaining text for time references
