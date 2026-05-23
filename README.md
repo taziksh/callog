@@ -1,131 +1,96 @@
 # callog
 
-Text in, calendar event out. Type `cal "leetcode 2-4pm"` and it lands on your Google Calendar.
+A quick way to add events to your Google Calendar from the terminal. Run `cal "leetcode 2-4pm"` and it's on your calendar.
 
-Use it two ways:
-- **CLI** (`cal "..."`) — runs on your machine, no server needed. This is the main way.
-- **HTTP server** (optional) — for reaching it from somewhere that *isn't* this machine (a phone, a text-message relay, another computer). Off by default.
+It's mainly a CLI. There's also a small HTTP server for reaching it from your phone or another machine, but it stays off unless you start it.
 
-> **Status:** personal tool, but usable. Built for quick local logging, not as a hosted multi-user calendar service.
+## Writing an entry
 
----
-
-## Syntax
-
-Every entry is a **title**, a **time**, and an optional **note**:
+The format is:
 
 ```
 <title> <time> [// <note>]
 ```
 
-### Time — use exactly one form
-- **Range:** `2-4pm`, `9-10:30am`, `3-3:30pm`
-- **Start + duration:** `2pm 45min`, `6am 1h`, `8pm 90m`, `7am 1.5h`
+The time can be a range like `2-4pm` or `9-10:30am`, or a start time plus a duration like `2pm 45min`, `6am 1h`, or `7am 1.5h`. Durations accept `m`, `min`, `minute`, `minutes` and `h`, `hr`, `hour`, `hours`. Use one form or the other; a range and a duration together, or neither, is rejected.
 
-Duration units: `m` / `min` / `mins` / `minute` / `minutes`, and `h` / `hr` / `hrs` / `hour` / `hours`.
-Supplying **both** a range and a duration, or **neither**, is rejected.
+You can leave off am/pm. When you do, callog picks the most recent time that's already passed, so at 3pm `2-4` is the afternoon and `9-11` is the morning. If both would still be in the future (e.g. it's 1am), it assumes you meant yesterday. 24-hour times also work, so `14-16` is the same as 2-4pm.
 
-**am/pm is optional.** A bare time is read as the **most recent past** time — the
-latest reading at or before now. At 3pm, `2-4` means 2–4pm and `9-11` means 9–11am.
-If both readings are still ahead (e.g. it's 1am), it rolls back to yesterday.
-**24-hour** times work too: `14-16` is 2–4pm.
+You can start with a day word too: `meeting tomorrow 9-10`, `review yesterday 2-4`, or `tonight 8-9`. `tonight` counts as pm.
 
-A **date word** sets the day: `meeting tomorrow 9-10`, `review yesterday 2-4`,
-`tonight 8-9` (`tonight` is pm). The am/pm is still inferred.
+Whatever's left after the time becomes the title, and anything after a ` // ` becomes the event's notes.
 
-### Title
-Whatever's left after the time is removed. `coffee w alex 3-3:30pm` → title `coffee w alex`.
+Some examples:
 
-### Note (optional)
-Anything after ` // ` becomes the event's description (the notes body).
-No `//` means no description.
+| You type | Title | When | Note |
+|----------|-------|------|------|
+| `leetcode 2-4pm` | leetcode | 2 to 4pm | |
+| `workout 6am 1h` | workout | 6 to 7am | |
+| `leetcode 2-4` at 3pm | leetcode | 2 to 4pm | |
+| `meeting tomorrow 9-10` | meeting | tomorrow, 9 to 10am | |
+| `leetcode 2-4pm // solved DP 1-50` | leetcode | 2 to 4pm | solved DP 1-50 |
 
-### Examples
-| Input | Title | When | Note |
-|-------|-------|------|------|
-| `leetcode 2-4pm` | leetcode | 2:00–4:00pm | — |
-| `deep work 9-10:30am` | deep work | 9:00–10:30am | — |
-| `workout 6am 1h` | workout | 6:00–7:00am | — |
-| `reading 8pm 90m` | reading | 8:00–9:30pm | — |
-| `leetcode 2-4` (at 3pm) | leetcode | 2:00–4:00pm | — |
-| `meeting tomorrow 9-10` | meeting | tomorrow 9:00–10:00am | — |
-| `leetcode 2-4pm // solved DP problems 1-50` | leetcode | 2:00–4:00pm | solved DP problems 1-50 |
-
-Rejected (and why): `meeting 2pm` (no end/duration), `leetcode 2-4pm 1h` (both range and duration), `no time here` (no time).
-
----
+And some things that get rejected: `meeting 2pm` (no end or duration), `leetcode 2-4pm 1h` (both a range and a duration), and `no time here` (no time at all).
 
 ## Setup
 
-### 1. Install bun
-```bash
-curl -fsSL https://bun.sh/install | bash   # or: brew install bun
-bun --version
-```
+First, install bun:
 
-### 2. Install dependencies
 ```bash
-cd callog
+brew install bun        # or: curl -fsSL https://bun.sh/install | bash
 bun install
+bun test                # checks the parser works, no Google needed
 ```
 
-Smoke-test the parser (no Google needed yet):
-```bash
-bun test     # expect: all passed
-```
+Next, callog needs access to your calendar, which means a Desktop OAuth client saved as `credentials.json` in the project root. (You can tell it's the right type because the JSON has an `"installed"` key.) If you already have one from something like gcalcli, just copy it in. Otherwise, in the [Google Cloud Console](https://console.cloud.google.com):
 
-### 3. Google OAuth credentials
-You need a **Desktop** OAuth client for the Google Calendar API, saved as `credentials.json` in the project root.
+1. Enable the Google Calendar API
+2. On the OAuth consent screen, set the user type to External and add your account under Test users
+3. Create an OAuth client ID, choose Desktop app, and download the JSON as `credentials.json`
 
-**If you already have one** (e.g. from another tool like gcalcli): copy that `client_secret_*.json` file in as `credentials.json`. It must be a Desktop client (its JSON has an `"installed"` key).
+Then authorize:
 
-**Otherwise, create one:**
-1. https://console.cloud.google.com → pick or create a project
-2. **APIs & Services → Library** → enable **Google Calendar API**
-3. **APIs & Services → OAuth consent screen** → User type **External** → add your own Google account under **Test users**
-4. **APIs & Services → Credentials → Create Credentials → OAuth client ID** → type **Desktop app** → **Download JSON**
-5. Rename the download to `credentials.json` and put it in the project root
-
-### 4. Authorize (get a refresh token)
 ```bash
 bun run oauth
 ```
-Opens a URL → sign in with the account you added as a test user → you'll see "Google hasn't verified this app" (expected for a personal app) → **Advanced → Go to callog (unsafe) → Allow**. It saves `token.json`.
 
-`credentials.json` and `token.json` are git-ignored. Do not commit them.
+This sends you to Google to sign in. You'll see an "app isn't verified" warning, which is expected for a personal tool, so click Advanced, then Go to callog, then Allow. It saves a `token.json`. Both that and `credentials.json` are git-ignored.
 
----
-
-## CLI usage
+## Using the CLI
 
 ```bash
-cal leetcode 2-4pm                         # log an event
-cal leetcode 2-4pm // solved DP 1-50       # with a note
-cal "alex's 1:1 3-4pm"                     # quote entries containing ' or |
-cal undo <event_id>                        # remove an event (id printed on create)
-cal --help                                 # full syntax
+cal leetcode 2-4pm
+cal leetcode 2-4pm // solved DP 1-50
+cal "alex's 1:1 3-4pm"        # quote anything containing a ' or |
+cal undo <event_id>           # the id is printed when you create an event
+cal --help
 ```
 
-For daily use, add a shell alias or function that runs the CLI from this directory. Without one, run it directly:
+If you haven't set up a `cal` alias yet, you can run it directly with `bun run cli "leetcode 2-4pm"`.
+
+## The server (optional)
+
+You only need this to reach callog from another device.
+
 ```bash
-bun run cli "leetcode 2-4pm"
+bun run dev                   # http://localhost:3000
 ```
 
----
+The endpoints are:
 
-## Server usage (optional)
+- `POST /log` with `{ "text": "leetcode 2-4pm // note" }` to create an event
+- `POST /undo` with `{ "event_id": "..." }` to delete one
+- `GET /health` to check it's running
 
-Only needed to reach callog from another device. Run it:
-```bash
-bun run dev                                # http://localhost:3000
+Every request needs an `X-Auth` header matching `AUTH_SECRET`. It defaults to `dev-secret-change-me`, which is fine locally, but set a real one before exposing the server:
+
+```fish
+set -x AUTH_SECRET something-private
+bun run dev
 ```
 
-Endpoints:
-- `POST /log` — body `{ "text": "leetcode 2-4pm // note" }` → creates an event
-- `POST /undo` — body `{ "event_id": "..." }` → deletes it
-- `GET /health` — sanity check
+A request looks like:
 
-Every request needs an `X-Auth` header matching the server's secret:
 ```bash
 curl -X POST http://localhost:3000/log \
   -H "Content-Type: application/json" \
@@ -133,36 +98,22 @@ curl -X POST http://localhost:3000/log \
   -d '{"text": "leetcode 2-4pm"}'
 ```
 
-**Auth:** the secret defaults to `dev-secret-change-me`, which is fine for local-only use. Before exposing the server to the internet, set a real one:
-```fish
-set -x AUTH_SECRET something-private
-bun run dev
-```
-and send that same value as `X-Auth`.
-
----
-
 ## Project layout
 
 ```
-src/
-├── cli.ts          # the `cal` command (talks to Google directly, no server)
-├── server.ts       # optional HTTP server (/log, /undo, /health)
-├── log-event.ts    # shared "text → calendar event" step (CLI + server both use it)
-├── parser.ts       # text → { title, start, end, description }
-├── parser.test.ts  # parser tests  (bun test)
-├── calendar.ts     # Google Calendar create/delete
-└── oauth-setup.ts  # one-time token generator  (bun run oauth)
+src/cli.ts          # the cal command
+src/server.ts       # the optional HTTP server
+src/log-event.ts    # shared text-to-event logic, used by both
+src/parser.ts       # turns text into { title, start, end, description }
+src/calendar.ts     # talks to Google Calendar
+src/oauth-setup.ts  # token setup for bun run oauth
 ```
-
----
 
 ## Troubleshooting
 
-- **`credentials.json not found`** — finish Setup step 3.
-- **`token.json not found`** — run `bun run oauth` (Setup step 4).
-- **"Access blocked / app not verified"** — add your Google account under **Test users** on the OAuth consent screen.
-- **`No refresh_token returned`** during oauth — you authorized before; revoke at https://myaccount.google.com/permissions and re-run.
-- **oauth script hangs** — port 4567 is in use; free it or change `CALLBACK_PORT` in `src/oauth-setup.ts`.
-- **Event created at the wrong time** — check your machine's timezone; the code uses the system zone.
-- **`unauthorized` from the server** — your `X-Auth` header doesn't match `AUTH_SECRET`.
+- **`credentials.json` or `token.json` not found:** finish setup, or run `bun run oauth`.
+- **"Access blocked" / "app not verified":** add your account under Test users on the consent screen.
+- **`No refresh_token returned` during oauth:** you've authorized before. Revoke callog at [Google permissions](https://myaccount.google.com/permissions) and run it again.
+- **oauth hangs:** something is using port 4567. Free it, or change `CALLBACK_PORT` in `src/oauth-setup.ts`.
+- **Event created at the wrong time:** callog uses your machine's timezone, so check that.
+- **Server returns `unauthorized`:** your `X-Auth` header doesn't match `AUTH_SECRET`.
