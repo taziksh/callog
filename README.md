@@ -23,6 +23,14 @@ Every entry is a **title**, a **time**, and an optional **note**:
 Duration units: `m` / `min` / `mins` / `minute` / `minutes`, and `h` / `hr` / `hrs` / `hour` / `hours`.
 Supplying **both** a range and a duration, or **neither**, is rejected.
 
+**am/pm is optional.** A bare time is read as the **most recent past** time — the
+latest reading at or before now. At 3pm, `2-4` means 2–4pm and `9-11` means 9–11am.
+If both readings are still ahead (e.g. it's 1am), it rolls back to yesterday.
+**24-hour** times work too: `14-16` is 2–4pm.
+
+A **date word** sets the day: `meeting tomorrow 9-10`, `review yesterday 2-4`,
+`tonight 8-9` (`tonight` is pm). The am/pm is still inferred.
+
 ### Title
 Whatever's left after the time is removed. `coffee w alex 3-3:30pm` → title `coffee w alex`.
 
@@ -37,6 +45,8 @@ No `//` means no description.
 | `deep work 9-10:30am` | deep work | 9:00–10:30am | — |
 | `workout 6am 1h` | workout | 6:00–7:00am | — |
 | `reading 8pm 90m` | reading | 8:00–9:30pm | — |
+| `leetcode 2-4` (at 3pm) | leetcode | 2:00–4:00pm | — |
+| `meeting tomorrow 9-10` | meeting | tomorrow 9:00–10:00am | — |
 | `leetcode 2-4pm // solved DP problems 1-50` | leetcode | 2:00–4:00pm | solved DP problems 1-50 |
 
 Rejected (and why): `meeting 2pm` (no end/duration), `leetcode 2-4pm 1h` (both range and duration), `no time here` (no time).
