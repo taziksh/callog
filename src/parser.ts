@@ -75,11 +75,9 @@ export function parse(text: string, now: Date = new Date()): ParsedEvent | Parse
     // it's the only remaining content (so "tonight 8-9" → title "tonight").
     let title = removeSpans(working, inferred.remove);
     if (!title) {
-      // Try keeping the date word in the title by only removing the time spans.
-      const timeOnlyRemove = inferred.remove.slice(1); // first span is the range/single; rest is the date word
-      // Actually remove[] order is [timeSpan, ...dateWordSpan], so keep just the time span:
-      const timeSpan = inferred.remove.slice(0, 1);
-      title = removeSpans(working, timeSpan);
+      // Removing both spans emptied the title (e.g. "tonight 8-9"). Keep the date
+      // word as the title by removing only the time span (always remove[0]).
+      title = removeSpans(working, inferred.remove.slice(0, 1));
     }
     if (!title) return { error: 'no title found' };
     return { title, start, end, description };
