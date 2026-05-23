@@ -14,10 +14,13 @@ Usage:
 
 Arguments:
   <title>   event name, e.g. "deep work"
-  <time>    one of:
-              <start>-<end>      2-4pm        9-10:30am
-              <start> <length>   2pm 45min    6am 1h
+  <time>    am/pm optional — a bare time is the most recent past
+            (at 3pm, 2-4 = 2-4pm; 9-11 = 9-11am). 24-hour ok: 14-16.
+            one of:
+              <start>-<end>      2-4pm   9-10:30am   2-4   14-16
+              <start> <length>   2pm 45min   6am 1h   2 45min
             length units: m/min, h/hr
+            a date word sets the day: tomorrow 9-10   tonight 8-9
   <note>    text after //, saved as the event's description
 
 Examples:

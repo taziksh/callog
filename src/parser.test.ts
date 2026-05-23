@@ -79,6 +79,94 @@ describe('known limitations', () => {
   });
 });
 
+describe('meridiem inference', () => {
+  // Local-time builder so AM/PM assertions don't depend on host timezone.
+  const at = (d: number, h: number, mi = 0) => new Date(2026, 4, d, h, mi, 0);
+  const pm3 = at(15, 15); // Fri 3:00 PM
+
+  const okAt = (input: string, n: Date): ParsedEvent => {
+    const r = parse(input, n);
+    if ('error' in r) throw new Error(`expected ok, got error "${r.error}" (input: ${JSON.stringify(input)})`);
+    return r;
+  };
+
+  test('bare pm range', () => {
+    const e = okAt('leetcode 2-4', pm3);
+    expect(e.title).toBe('leetcode');
+    expect(e.start).toEqual(at(15, 14));
+    expect(e.end).toEqual(at(15, 16));
+  });
+  test('bare am range', () => {
+    expect(okAt('deep work 9-11', pm3).start).toEqual(at(15, 9));
+  });
+  test('crosses noon: 11-1', () => {
+    const e = okAt('sync 11-1', pm3);
+    expect(e.start).toEqual(at(15, 11));
+    expect(e.end).toEqual(at(15, 13));
+  });
+  test('boundary: lunch 2-3 at 1pm -> AM', () => {
+    expect(okAt('lunch 2-3', at(15, 13)).start).toEqual(at(15, 2));
+  });
+  test('boundary: 2-4 at 1am -> yesterday PM', () => {
+    expect(okAt('x 2-4', at(15, 1)).start).toEqual(at(14, 14));
+  });
+  test('24-hour range', () => {
+    expect(okAt('block 14-16', pm3).start).toEqual(at(15, 14));
+  });
+  test('mixed 24-hour end', () => {
+    const e = okAt('block 9-17', pm3);
+    expect(e.start).toEqual(at(15, 9));
+    expect(e.end).toEqual(at(15, 17));
+  });
+  test('2:00-4:00 no longer AM-defaults', () => {
+    expect(okAt('x 2:00-4:00', pm3).start).toEqual(at(15, 14));
+  });
+  test('bare single + duration', () => {
+    const e = okAt('lap 2 45min', pm3);
+    expect(e.title).toBe('lap');
+    expect(e.start).toEqual(at(15, 14));
+    expect(mins(e)).toBe(45);
+  });
+  test('trailing single beats an earlier title number', () => {
+    const e = okAt('do 3 problems 2 45min', pm3);
+    expect(e.title).toBe('do 3 problems');
+    expect(e.start).toEqual(at(15, 14));
+  });
+  test('date word: tomorrow', () => {
+    const e = okAt('meeting tomorrow 9-10', pm3);
+    expect(e.title).toBe('meeting');
+    expect(e.start).toEqual(at(16, 9));
+    expect(e.end).toEqual(at(16, 10));
+  });
+  test('date word: yesterday', () => {
+    expect(okAt('review yesterday 2-4', pm3).start).toEqual(at(14, 14));
+  });
+  test('date word: tonight forces pm', () => {
+    expect(okAt('tonight 8-9', pm3).start).toEqual(at(15, 20));
+  });
+  test('description still split off', () => {
+    const e = okAt('leetcode 2-4 // solved DP', pm3);
+    expect(e.title).toBe('leetcode');
+    expect(e.description).toBe('solved DP');
+  });
+  test('bare range + duration is rejected (both)', () => {
+    const r = parse('leetcode 2-4 1h', pm3);
+    expect('error' in r && r.error).toMatch(/either/);
+  });
+  test('bare single with no duration is rejected (neither)', () => {
+    const r = parse('meeting 2', pm3);
+    expect('error' in r && r.error).toMatch(/range|duration/);
+  });
+
+  // Pinned known limitation: a number immediately before the time is ambiguous
+  // even to a human; document that the trailing single wins.
+  test('KNOWN LIMITATION: "do 5 2 30min" treats 2 as the time, "do 5" as title', () => {
+    const e = okAt('do 5 2 30min', pm3);
+    expect(e.title).toBe('do 5');
+    expect(e.start).toEqual(at(15, 14));
+  });
+});
+
 // Adversarial inputs must never throw — they should come back as a clean error
 // or a well-formed event, never a crash.
 describe('junk input never crashes', () => {
